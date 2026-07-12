@@ -79,6 +79,7 @@ class Generator(nn.Module) :
         out =  self.hr_convo1(out)
         out =  self.LReLU(out)
         out =  self.hr_convo2(out)
+        out =  self.LReLU(out)
         return out 
 
 # Discriminator    

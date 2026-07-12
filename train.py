@@ -7,6 +7,8 @@ import torch.optim as optim
 
 import argparse 
 
+import matplotlib.pyplot as plt 
+
 import gc
 import torch
 import torch.nn as nn  
@@ -20,7 +22,8 @@ parser.add_argument("--data" , type = str  , default = r"D:\DIV2K_train_HR\DIV2K
 parser.add_argument("--epochs" , type = int , default = 2) 
 parser.add_argument("--save_model" , type = str, default = "ESRGAN_save_1.pth") 
 parser.add_argument("--batch_size" , type = int , default = 4) 
-
+parser.add_argument("--experiment_folder" , type = str , default = "results")
+parser.add_argument("--exp" , type = str , default = "exp1")
 
 args = parser.parse_args()
 
@@ -32,21 +35,31 @@ G = Generator().to(device)
 
 D = Discriminator().to(device)
 
-optimizer_g = optim.Adam(G.parameters()) 
-optimizer_d = optim.Adam(D.parameters()) 
+optimizer_g = optim.Adam(G.parameters(),lr=1e-4,
+    betas=(0.9, 0.999)) 
+optimizer_d = optim.Adam(D.parameters(),lr=1e-4,
+    betas=(0.9, 0.999)) 
 
 pixel_loss = nn.L1Loss()
 adv_loss = nn.BCEWithLogitsLoss()
 
 
 
+folder_results = os.path.join(
+     args.experiment_folder , 
+     args.exp
+)
+
+os.makedirs(folder_results, exist_ok=True)
+
+
 if __name__ == "__main__" : 
     G.train()
     D.train()
     epochs = args.epochs
-    g_loss = 0.0 
-    d_loss = 0.0 
     for epoch in range(epochs):
+        g_loss = 0.0 
+        d_loss = 0.0 
         for lr , hr in train_dataloader : 
                 lr = lr.to(device)
                 hr = hr.to(device) 
@@ -61,7 +74,7 @@ if __name__ == "__main__" :
 
                 pixel_ls = pixel_loss(output , hr) 
 
-                pred_real_or_fake = D(output.detach())
+                pred_real_or_fake = D(output)
 
                 log_loss = adv_loss(pred_real_or_fake , real_labels)  
 
@@ -76,7 +89,7 @@ if __name__ == "__main__" :
                 # discriminator  train 
 
                 real_pred = D(hr)  
-                fake_pred = D(lr)
+                fake_pred = D(output.detach())
 
                 real_loss = adv_loss(real_pred , real_labels)
                 fake_loss = adv_loss(fake_pred , fake_labels)
@@ -89,16 +102,55 @@ if __name__ == "__main__" :
 
                 optimizer_d.step()     
 
-                g_loss += mean_loss
-                d_loss += avg_loss 
-        print(f"{epoch + 1} / {epochs}  g_loss = {g_loss/len(train_dataloader)} d_loss = {d_loss / len(train_dataloader)}")
+                g_loss += mean_loss.item()
+                d_loss += avg_loss.item()  
+
+        print(f"{epoch + 1} / {epochs}  g_loss = {g_loss/len(train_dataloader)} d_loss = {d_loss / len(train_dataloader)}") 
+
+        with torch.no_grad() :  
+            lr = lr[0].detach().cpu().permute(1 , 2, 0)
+            hr = hr[0].detach().cpu().permute(1 , 2, 0) 
+            gen_img = output[0].detach().cpu().permute(1 , 2, 0) 
+
+            lr = (lr + 1) / 2
+            hr = (hr + 1) / 2
+            gen_img = (gen_img + 1) / 2
+
+            fig , ax = plt.subplots(1 , 3 , figsize = (12 , 4))
+
+            ax[0].imshow(hr)
+            ax[0].set_title("HR")
+            ax[0].axis("off")
+
+            ax[1].imshow(lr)
+            ax[1].set_title("LR")
+            ax[1].axis("off")
+
+            ax[2].imshow(gen_img) 
+            ax[2].set_title("GEN")
+            ax[2].axis("off")
+
+            plt.tight_layout()
+
+            plt.savefig(
+                 os.path.join(
+                   folder_results , 
+                   f"{epoch + 1}.png"   
+                 )
+            ) 
+
+            plt.close()
+
 
     torch.save(
         {
             "generator" :    G.state_dict() , 
             "discrimintaor" : D.state_dict() , 
         },
-        f"{args.save_model}"
+        os.path.join(
+           folder_results ,  
+           f"{args.save_model}" 
+        )
     )
 
 
