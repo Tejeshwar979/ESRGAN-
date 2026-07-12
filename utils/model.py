@@ -72,18 +72,16 @@ class Generator(nn.Module) :
         # upsampling and hr-convo 
         out =  self.upsampling1(part1_features) 
         out =  self.pixelshuffle(out)
-        out = self.LReLU(out)
+        out =  self.LReLU(out)
         out =  self.upsampling1(out) 
         out =  self.pixelshuffle(out)
-        out = self.LReLU(out)
+        out =  self.LReLU(out)
         out =  self.hr_convo1(out)
-        out = self.LReLU(out)
+        out =  self.LReLU(out)
         out =  self.hr_convo2(out)
         return out 
 
-
 # Discriminator    
-
 
 class Discriminator(nn.Module) : 
     def __init__(self):
