@@ -10,7 +10,7 @@ class image_processing():
         self.transformations = transforms.Compose([
             transforms.ToTensor(), 
             transforms.Normalize((0.5 , 0.5 , 0.5) , (0.5 , 0.5 , 0.5)),
-        ])
+        ]) 
     def __len__(self): 
         return len(self.images_data)
     def __getitem__(self , idx):

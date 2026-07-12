@@ -63,6 +63,7 @@ class Generator(nn.Module) :
         self.pixelshuffle = nn.PixelShuffle(2) 
         self.hr_convo1 = nn.Conv2d(64 , 64 , 3 , 1, 1)
         self.hr_convo2 = nn.Conv2d(64 , 3 , 3 , 1, 1)
+        self.LReLU = nn.LeakyReLU(0.2)
     def forward(self , x):
         x0 = self.f0(x)
         out = self.RRDB_Layers_23(x0)
@@ -71,7 +72,12 @@ class Generator(nn.Module) :
         # upsampling and hr-convo 
         out =  self.upsampling1(part1_features) 
         out =  self.pixelshuffle(out)
+        out = self.LReLU(out)
+        out =  self.upsampling1(out) 
+        out =  self.pixelshuffle(out)
+        out = self.LReLU(out)
         out =  self.hr_convo1(out)
+        out = self.LReLU(out)
         out =  self.hr_convo2(out)
         return out 
 
