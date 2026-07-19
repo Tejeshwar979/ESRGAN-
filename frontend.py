@@ -59,27 +59,29 @@ if upload_file is not None :
     )
 
     if st.button("generate high resolution") : 
-        st.write("Generating...") 
-    
-        lr_tensor = transform(image) 
-        lr_tensor = lr_tensor.unsqueeze(0)
-        lr_tensor = lr_tensor.to(device)
-        with torch.no_grad():
-            hr_tensor = generator(lr_tensor)  
-        
-        hr_tensor = hr_tensor.squeeze(0).cpu() 
-        hr_tensor = ( hr_tensor + 1 )/ 2
+        with st.spinner("Loading..."):
+            try : 
+                lr_tensor = transform(image) 
+                lr_tensor = lr_tensor.unsqueeze(0)
+                lr_tensor = lr_tensor.to(device)
+                with torch.no_grad():
+                    hr_tensor = generator(lr_tensor)  
+                
+                hr_tensor = hr_tensor.squeeze(0).cpu() 
+                hr_tensor = ( hr_tensor + 1 )/ 2
 
-        hr_tensor = torch.clamp(hr_tensor ,0 , 1) 
+                hr_tensor = torch.clamp(hr_tensor ,0 , 1) 
 
-        hr_image = to_pil(hr_tensor)
+                hr_image = to_pil(hr_tensor)
 
-        st.image(
-            hr_image , 
-            caption = "high resolution image"
-        )
-        
+                st.image(
+                    hr_image , 
+                    caption = "high resolution image"
+                )
 
+                
+            except Exception as e : 
+                st.write(e) 
 
 
 
