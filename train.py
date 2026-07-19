@@ -1,6 +1,5 @@
 from utils.loader import *  
 from utils.model import *  
-
 from torchvision import transforms 
 
 import torch.optim as optim 
@@ -43,15 +42,12 @@ optimizer_d = optim.Adam(D.parameters(),lr=1e-4,
 pixel_loss = nn.L1Loss()
 adv_loss = nn.BCEWithLogitsLoss()
 
-
-
 folder_results = os.path.join(
      args.experiment_folder , 
      args.exp
 )
 
 os.makedirs(folder_results, exist_ok=True)
-
 
 if __name__ == "__main__" : 
     G.train()
